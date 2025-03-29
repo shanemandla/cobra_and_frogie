@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>COBRA by shanecore_systems™</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: none;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #000;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        h1 {
+            margin: 10px 0;
+            text-shadow: 0 0 10px #00ff00;
+            z-index: 2;
+            font-size: 24px;
+        }
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: calc(100vh - 180px);
+            max-height: 400px;
+            z-index: 1;
+            margin: 0 auto;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 20px #00ff0040;
+        }
+        #background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.7;
+        }
+        .game-info {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+            z-index: 2;
+            padding: 0 10px;
+        }
+        .logo {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+            z-index: 2;
+            font-weight: bold; /* Made shanecore text bold */
+        }
+        #splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 100;
+            background-image: url('https://assets.onecompiler.app/43af7ep2e/43d6g9qhx/IMG-20250329-WA0014.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+        #splash::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+        #splash-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 20px;
+            max-width: 90%;
+        }
+        #splash h2 {
+            color: #00ff00;
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px #00ff00;
+            margin-bottom: 10px;
+        }
+        #splash p {
+            color: white;
+            font-size: 1.2rem;
+            margin-top: 10px;
+            font-weight: bold; /* Made splash screen shanecore text bold */
+        }
+        #startButton {
+            background-color: #00ff00;
+            color: black;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            margin-top: 30px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .mobile-controls {
+            display: none;
+            width: 100%;
+            max-width: 400px;
+            margin: 10px auto;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 10px;
+            z-index: 2;
+            padding: 0 20px;
+        }
+        .mobile-btn {
+            background-color: rgba(0, 255, 0, 0.3);
+            color: white;
+            border: 1px solid #00ff00;
+            padding: 20px 0;
+            text-align: center;
+            font-size: 24px;
+            border-radius: 10px;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        .mobile-btn:active {
+            background-color: rgba(0, 255, 0, 0.7);
+            transform: scale(0.95);
+        }
+        .up-btn {
+            grid-column: 2;
+            grid-row: 1;
+        }
+        .left-btn {
+            grid-column: 1;
+            grid-row: 2;
+        }
+        .down-btn {
+            grid-column: 2;
+            grid-row: 2;
+        }
+        .right-btn {
+            grid-column: 3;
+            grid-row: 2;
+        }
+        .control-label {
+            display: block;
+            font-size: 12px;
+            margin-top: 5px;
+            color: #aaa;
+        }
+
+        @media (max-width: 768px), (pointer: coarse) {
+            .mobile-controls {
+                display: grid;
+            }
+            .game-container {
+                height: calc(100vh - 250px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="splash">
+        <div id="splash-content">
+            <h2>COBRA</h2>
+            <p>shanecore_systems™</p>
+            <button id="startButton">START GAME</button>
+        </div>
+    </div>
+
+    <h1>COBRA</h1>
+    <div class="game-container">
+        <img id="background" src="https://assets.onecompiler.app/43af7ep2e/43d6g9qhx/IMG-20250305-WA0031.jpg" alt="Background">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+    <div class="game-info">
+        <div>Score: <span id="score">0</span></div>
+        <div>Level: <span id="level">1</span></div>
+        <div>Lives: <span id="lives">3</span></div>
+    </div>
+    <div class="mobile-controls">
+        <div class="mobile-btn up-btn">↑<span class="control-label">UP</span></div>
+        <div class="mobile-btn left-btn">←<span class="control-label">LEFT</span></div>
+        <div class="mobile-btn down-btn">↓<span class="control-label">DOWN</span></div>
+        <div class="mobile-btn right-btn">→<span class="control-label">RIGHT</span></div>
+    </div>
+    <div class="logo">shanecore_systems™</div>
+
+    <script>
+        // Game variables
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const levelElement = document.getElementById('level');
+        const livesElement = document.getElementById('lives');
+        const background = document.getElementById('background');
+        const splashScreen = document.getElementById('splash');
+        const startButton = document.getElementById('startButton');
+        
+        // Mobile controls
+        const upBtn = document.querySelector('.up-btn');
+        const leftBtn = document.querySelector('.left-btn');
+        const downBtn = document.querySelector('.down-btn');
+        const rightBtn = document.querySelector('.right-btn');
+        
+        // Set canvas size based on container
+        function resizeCanvas() {
+            const container = document.querySelector('.game-container');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        
+        const gridSize = 20;
+        let tileCountX, tileCountY;
+        
+        let snake = [
+            {x: 10, y: 10}
+        ];
+        let velocityX = 0;
+        let velocityY = 0;
+        let foodX = 5;
+        let foodY = 5;
+        let foodType = 'normal'; // 'normal' or 'poison'
+        let score = 0;
+        let level = 1;
+        let lives = 3;
+        let gameSpeed = 150;
+        let gameLoop;
+        let gameOver = false;
+        let foodActive = true;
+        let foodTimer;
+        let snakeAngle = 0;
+        
+        // Colors (adjusted for better visibility on background)
+        const colors = {
+            snakeBody: '#3a5f0b',
+            snakeBelly: '#6b8c21',
+            snakePattern: '#1f3a08',
+            snakeHead: '#4a752c',
+            snakeEye: '#000000',
+            snakeTongue: '#ff0000',
+            food: '#ff9900',
+            poison: '#ff0000',
+            background: 'rgba(0, 0, 0, 0.5)'
+        };
+        
+        // Initialize game
+        function initGame() {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            tileCountX = Math.floor(canvas.width / gridSize);
+            tileCountY = Math.floor(canvas.height / gridSize);
+            
+            // Center snake on start
+            snake = [
+                {x: Math.floor(tileCountX / 2), y: Math.floor(tileCountY / 2)}
+            ];
+            
+            // Mobile control event listeners
+            const addControlListeners = (element, direction) => {
+                element.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleMobileInput(direction);
+                });
+                element.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    handleMobileInput(direction);
+                });
+            };
+            
+            addControlListeners(upBtn, 'up');
+            addControlListeners(leftBtn, 'left');
+            addControlListeners(downBtn, 'down');
+            addControlListeners(rightBtn, 'right');
+            
+            // Prevent touch scroll
+            document.addEventListener('touchmove', (e) => {
+                if (e.target.classList.contains('mobile-btn')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+        }
+        
+        // Start game function
+        function startGame() {
+            splashScreen.style.display = 'none';
+            initGame();
+            resetGame();
+        }
+        
+        // Add event listener to start button
+        startButton.addEventListener('click', startGame);
+        
+        // Also allow starting with spacebar
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && splashScreen.style.display !== 'none') {
+                startGame();
+            }
+        });
+        
+        // Handle mobile input
+        function handleMobileInput(direction) {
+            if (gameOver) return;
+            
+            switch(direction) {
+                case 'up':
+                    if (velocityY !== 1) {
+                        velocityX = 0;
+                        velocityY = -1;
+                    }
+                    break;
+                case 'down':
+                    if (velocityY !== -1) {
+                        velocityX = 0;
+                        velocityY = 1;
+                    }
+                    break;
+                case 'left':
+                    if (velocityX !== 1) {
+                        velocityX = -1;
+                        velocityY = 0;
+                    }
+                    break;
+                case 'right':
+                    if (velocityX !== -1) {
+                        velocityX = 1;
+                        velocityY = 0;
+                    }
+                    break;
+            }
+        }
+        
+        // Draw 3D snake segment
+        function drawSnakeSegment(x, y, isHead, angle) {
+            const centerX = x * gridSize + gridSize/2;
+            const centerY = y * gridSize + gridSize/2;
+            
+            // Save context
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(angle);
+            
+            // Create 3D effect with gradient and shadow
+            const bodyGradient = ctx.createLinearGradient(-gridSize/2, -gridSize/3, gridSize/2, gridSize/3);
+            bodyGradient.addColorStop(0, '#2a4d0a');  // Darker shade for depth
+            bodyGradient.addColorStop(0.5, colors.snakeBelly);
+            bodyGradient.addColorStop(1, '#3a5f0b');  // Darker shade
+            
+            // Draw main body with 3D effect
+            ctx.beginPath();
+            ctx.ellipse(0, 0, gridSize/2 - 2, gridSize/3, 0, 0, Math.PI * 2);
+            ctx.fillStyle = bodyGradient;
+            ctx.fill();
+            
+            // Add 3D shading
+            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(0, 2, gridSize/2 - 3, gridSize/3 - 1, 0, Math.PI, Math.PI * 2);
+            ctx.stroke();
+            
+            // Add highlight for 3D effect
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.ellipse(0, -2, gridSize/2 - 3, gridSize/3 - 1, 0, 0, Math.PI);
+            ctx.stroke();
+            
+            // Draw pattern (diamond shapes along the back)
+            if (!isHead) {
+                ctx.fillStyle = colors.snakePattern;
+                for (let i = -1; i <= 1; i += 0.5) {
+                    ctx.beginPath();
+                    ctx.moveTo(i * gridSize/2, -gridSize/4);
+                    ctx.lineTo((i + 0.25) * gridSize/2, -gridSize/3);
+                    ctx.lineTo((i + 0.5) * gridSize/2, -gridSize/4);
+                    ctx.lineTo((i + 0.25) * gridSize/2, -gridSize/6);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+            
+            // Draw head features if it's the head
+            if (isHead) {
+                // Draw head with 3D effect
+                const headGradient = ctx.createLinearGradient(-gridSize/2, 0, gridSize/2, 0);
+                headGradient.addColorStop(0, '#3a5f0b');
+                headGradient.addColorStop(0.5, '#5a7f2b');
+                headGradient.addColorStop(1, '#3a5f0b');
+                
+                // Head shape (slightly larger)
+                ctx.beginPath();
+                ctx.ellipse(0, 0, gridSize/2 - 1, gridSize/2.5, 0, 0, Math.PI * 2);
+                ctx.fillStyle = headGradient;
+                ctx.fill();
+                
+                // Head shading
+                ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.ellipse(0, 2, gridSize/2 - 2, gridSize/2.5 - 1, 0, Math.PI, Math.PI * 2);
+                ctx.stroke();
+                
+                // Head highlight
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.ellipse(0, -2, gridSize/2 - 2, gridSize/2.5 - 1, 0, 0, Math.PI);
+                ctx.stroke();
+                
+                // Draw eyes with 3D effect
+                ctx.fillStyle = '#6b8c21';
+                ctx.beginPath();
+                ctx.arc(-gridSize/4, -gridSize/6, gridSize/6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(gridSize/4, -gridSize/6, gridSize/6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Eye shading
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.beginPath();
+                ctx.arc(-gridSize/4, -gridSize/6 + 2, gridSize/6 - 1, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(gridSize/4, -gridSize/6 + 2, gridSize/6 - 1, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw pupils with depth
+                ctx.fillStyle = colors.snakeEye;
+                ctx.beginPath();
+                ctx.arc(-gridSize/4 + 1, -gridSize/6 + 1, gridSize/12, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(gridSize/4 + 1, -gridSize/6 + 1, gridSize/12, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw tongue when moving
+                if (velocityX !== 0 || velocityY !== 0) {
+                    ctx.strokeStyle = colors.snakeTongue;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(0, gridSize/8);
+                    ctx.lineTo(gridSize/3, gridSize/4);
+                    ctx.lineTo(gridSize/2, gridSize/3);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(0, gridSize/8);
+                    ctx.lineTo(gridSize/3, gridSize/4);
+                    ctx.lineTo(gridSize/2, gridSize/5);
+                    ctx.stroke();
+                }
+            }
+            
+            // Restore context
+            ctx.restore();
+        }
+        
+        // Draw snake
+        function drawSnake() {
+            // Calculate angle for head
+            let headAngle = 0;
+            if (velocityX === 1) headAngle = 
